@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup login listener
     setupLoginListener();
 
-    // Start CoinGecko polling (will run in background)
+    // Start CoinGecko polling
     if (typeof coingecko !== 'undefined') {
         coingecko.startPolling();
     } else {
@@ -67,7 +67,7 @@ function resetStatusMessage() {
 }
 
 // ============================================
-// LOGIN FUNCTIONS - SIMPLE EMAIL ONLY
+// LOGIN FUNCTIONS
 // ============================================
 function setupLoginListener() {
     const loginBtn = document.getElementById('loginBtn');
@@ -82,7 +82,6 @@ function setupLoginListener() {
             if (e.key === 'Enter') handleLogin();
         });
         
-        // Also reset message when user starts typing
         emailInput.addEventListener('input', () => {
             resetStatusMessage();
         });
@@ -144,7 +143,6 @@ function showLogin() {
     if (dashboardWrapper) dashboardWrapper.style.display = 'none';
     if (headerTop) headerTop.style.display = 'none';
     
-    // Reset message when showing login
     resetStatusMessage();
 }
 
@@ -209,27 +207,26 @@ function initializeDashboard() {
     // Search
     document.getElementById('searchInput')?.addEventListener('input', (e) => filterTransactions(e.target.value));
 
-    // Load initial data
+    // Load transactions
+    loadUserTransactions();
+    
+    // Update stats based on actual transactions
+    updateStats();
     updateTaxSummary();
-    updateTaxChart(4321.09, 890.12);
 
-    // Setup price updates
+    // Setup price updates with proper symbol display
     if (typeof coingecko !== 'undefined') {
         coingecko.updateUI = function(prices) {
             const pricesList = document.getElementById('pricesList');
             if (!pricesList) return;
 
-            const coinMap = { 'bitcoin': 'BTC', 'ethereum': 'ETH', 'binancecoin': 'BNB', 'solana': 'SOL' };
             pricesList.innerHTML = '';
 
-            for (const [coin, data] of Object.entries(prices)) {
-                const info = coinMap[coin];
-                if (!info) continue;
-                
+            for (const [coinId, data] of Object.entries(prices)) {
                 const item = document.createElement('div');
                 item.className = 'price-item';
                 item.innerHTML = `
-                    <span class="coin">${info.symbol}</span>
+                    <span class="coin">${data.symbol}</span>
                     <span class="price">$${data.usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     <span class="change ${data.change24h >= 0 ? 'positive' : 'negative'}">
                         ${data.change24h >= 0 ? '+' : ''}${data.change24h.toFixed(2)}%
@@ -267,14 +264,140 @@ function handleCountryChange(event) {
     }
 }
 
-// Feature functions
+function loadUserTransactions() {
+    const tbody = document.getElementById('transactionsBody');
+    if (!tbody) return;
+    
+    if (!isPremium) {
+        // Show upgrade message for non-premium users
+        tbody.innerHTML = `
+            <tr class="premium-row">
+                <td colspan="7" class="premium-message">
+                    <i class="fas fa-lock"></i>
+                    <span>Upgrade to Premium to add and view transactions</span>
+                    <button class="mini-premium-btn" onclick="showPaymentModal()">✨ UPGRADE NOW</button>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Show transactions for premium users
+    const transactions = typeof taxEngine !== 'undefined' ? taxEngine.transactions : [];
+    
+    if (transactions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 30px; color: #a0a0b0;">
+                    <i class="fas fa-inbox" style="font-size: 2em; margin-bottom: 10px;"></i><br>
+                    No transactions yet. Use IMPORT or ADD to get started.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Render transactions
+    tbody.innerHTML = transactions.map(tx => `
+        <tr>
+            <td>${tx.date}</td>
+            <td><span class="type-badge type-${tx.type}">${tx.type.toUpperCase()}</span></td>
+            <td>${tx.asset}</td>
+            <td>${tx.amount}</td>
+            <td>$${tx.price.toLocaleString()}</td>
+            <td>$${(tx.amount * tx.price).toLocaleString()}</td>
+            <td>
+                <button class="delete-btn" onclick="deleteTransaction('${tx.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateStats() {
+    if (!isPremium || typeof taxEngine === 'undefined') return;
+    
+    const transactions = taxEngine.transactions;
+    
+    // Calculate total portfolio value
+    let totalValue = 0;
+    const holdings = {};
+    
+    transactions.forEach(tx => {
+        if (tx.type === 'buy') {
+            holdings[tx.asset] = (holdings[tx.asset] || 0) + tx.amount;
+        } else if (tx.type === 'sell') {
+            holdings[tx.asset] = (holdings[tx.asset] || 0) - tx.amount;
+        }
+    });
+    
+    // Get current prices and calculate value
+    Object.keys(holdings).forEach(asset => {
+        if (holdings[asset] > 0 && typeof coingecko !== 'undefined') {
+            const price = coingecko.getPrice(asset);
+            if (price) {
+                totalValue += holdings[asset] * price;
+            }
+        }
+    });
+    
+    // Update UI
+    document.getElementById('totalPortfolio').textContent = `$${totalValue.toLocaleString()}`;
+    document.getElementById('totalTransactions').textContent = transactions.length;
+}
+
+function deleteTransaction(id) {
+    if (!isPremium || typeof taxEngine === 'undefined') return;
+    
+    if (confirm('Delete this transaction?')) {
+        taxEngine.deleteTransaction(id);
+        loadUserTransactions();
+        updateStats();
+        updateTaxSummary();
+    }
+}
+
 function importCSV() {
     if (!isPremium) {
         alert('✨ Premium feature. Upgrade to import CSV.');
         showPaymentModal();
         return;
     }
-    alert('📁 CSV Import - Premium feature (demo)');
+    
+    // Create file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file && window.Papa) {
+            Papa.parse(file, {
+                header: true,
+                complete: (results) => {
+                    results.data.forEach(row => {
+                        if (row.date && row.type && row.asset && row.amount && row.price) {
+                            taxEngine.addTransaction({
+                                date: row.date,
+                                type: row.type.toLowerCase(),
+                                asset: row.asset.toUpperCase(),
+                                amount: parseFloat(row.amount),
+                                price: parseFloat(row.price),
+                                fee: parseFloat(row.fee) || 0
+                            });
+                        }
+                    });
+                    alert(`✅ Imported ${results.data.length} transactions!`);
+                    loadUserTransactions();
+                    updateStats();
+                    updateTaxSummary();
+                }
+            });
+        }
+    };
+    
+    input.click();
 }
 
 function openModal() {
@@ -283,7 +406,36 @@ function openModal() {
         showPaymentModal();
         return;
     }
-    alert('➕ Add Transaction - Premium feature (demo)');
+    
+    // Simple prompt for demo
+    const date = prompt('Enter date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+    if (!date) return;
+    
+    const type = prompt('Enter type (buy/sell):', 'buy');
+    if (!type || !['buy', 'sell'].includes(type.toLowerCase())) return;
+    
+    const asset = prompt('Enter asset (e.g., BTC, ETH):', 'BTC').toUpperCase();
+    if (!asset) return;
+    
+    const amount = parseFloat(prompt('Enter amount:', '0.1'));
+    if (isNaN(amount) || amount <= 0) return;
+    
+    const price = parseFloat(prompt('Enter price in USD:', '50000'));
+    if (isNaN(price) || price <= 0) return;
+    
+    taxEngine.addTransaction({
+        date: date,
+        type: type.toLowerCase(),
+        asset: asset,
+        amount: amount,
+        price: price,
+        fee: 0
+    });
+    
+    alert(`✅ Transaction added!`);
+    loadUserTransactions();
+    updateStats();
+    updateTaxSummary();
 }
 
 function generatePDF() {
@@ -300,14 +452,14 @@ function calculateScenario() {
         return;
     }
 
-    let price = 45000; // Default
+    let price = 45000;
     if (typeof coingecko !== 'undefined') {
         const fetched = coingecko.getPrice(asset);
         if (fetched) price = fetched;
     }
 
     const totalValue = amount * price;
-    const estimatedGain = totalValue * 0.2; // Assume 20% gain
+    const estimatedGain = totalValue * 0.2;
     const tax = typeof taxEngine !== 'undefined' ? taxEngine.calculateTax(estimatedGain, currentCountry) : 0;
 
     resultDiv.innerHTML = `
@@ -324,8 +476,10 @@ function filterTransactions(searchTerm) {
 }
 
 function updateTaxSummary() {
-    const gain = 4321.09;
-    const tax = typeof taxEngine !== 'undefined' ? taxEngine.calculateTax(gain, currentCountry) : 890.12;
+    if (typeof taxEngine === 'undefined') return;
+    
+    const gain = taxEngine.calculateTotalGain();
+    const tax = taxEngine.calculateTax(gain, currentCountry);
 
     document.getElementById('totalGain').textContent = `$${gain.toFixed(2)}`;
     document.getElementById('taxableAmount').textContent = `$${gain.toFixed(2)}`;
@@ -408,6 +562,10 @@ function checkPayment() {
                 badge.innerHTML = '<i class="fas fa-star"></i> PREMIUM';
             }
             
+            // Reload transactions for premium view
+            loadUserTransactions();
+            updateStats();
+            
             alert('🎉 PREMIUM ACTIVATED!');
         }, 1500);
     }, 3000);
@@ -415,7 +573,6 @@ function checkPayment() {
 
 function logout() {
     localStorage.removeItem('cryptotax_user');
-    // Keep premium status if they paid
     closeLogoutModal();
     showLogin();
 }
@@ -428,6 +585,7 @@ window.closeLogoutModal = closeLogoutModal;
 window.copyWallet = copyWallet;
 window.checkPayment = checkPayment;
 window.logout = logout;
+window.deleteTransaction = deleteTransaction;
 window.importCSV = importCSV;
 window.generatePDF = generatePDF;
 window.calculateScenario = calculateScenario;
