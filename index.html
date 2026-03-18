@@ -1,287 +1,336 @@
-	<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 CRYPTOTAX - Multi-Jurisdiction Tax Calculator</title>
+    <title>💎 CRYPTOTAX • PREMIUM • Real-Time Crypto Tax Calculator</title>
     
     <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/uuid@9.0.1/dist/umd/uuid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles/cyberpunk.css">
+    <link rel="stylesheet" href="styles/neon-dark.css">
 </head>
 <body>
-    <div class="cyber-bg"></div>
-    <div class="cyber-grid"></div>
-
+    <!-- Premium Background Effects -->
+    <div class="noise"></div>
+    <div class="gradient-bg"></div>
+    <div class="particles" id="particles"></div>
+    
     <div class="container">
-        <!-- Header Futuristico -->
+        <!-- Header with Premium Badge -->
         <div class="header">
-            <div class="glitch-wrapper">
-                <h1>CRYPTO<span style="color: #ff00ff;">TAX</span></h1>
-                <div class="glitch-overlay"></div>
+            <div class="premium-badge">
+                <i class="fas fa-crown"></i> PREMIUM TIER
             </div>
-            <div class="subtitle">✦ MULTI-JURISDICTION TAX CALCULATOR ✦</div>
-        </div>
-
-        <!-- Quick Stats -->
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-coins"></i></div>
-                <div class="stat-label">Total Portfolio</div>
-                <div class="stat-value" id="totalPortfolio">€ 0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-                <div class="stat-label">Unrealized Gain</div>
-                <div class="stat-value" id="unrealizedGain">€ 0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-file-invoice"></i></div>
-                <div class="stat-label">Tax Estimate</div>
-                <div class="stat-value" id="totalTax">€ 0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-calendar"></i></div>
-                <div class="stat-label">Transactions</div>
-                <div class="stat-value" id="totalTransactions">0</div>
+            <h1 class="glitch" data-text="CRYPTOTAX">CRYPTOTAX</h1>
+            <div class="subtitle">
+                <span class="neon-text">real-time</span> • <span class="neon-text">multi-jurisdiction</span> • <span class="neon-text">coingecko™ powered</span>
             </div>
         </div>
 
-        <!-- Country Selector & Actions -->
-        <div class="action-bar">
+        <!-- Pricing Banner -->
+        <div class="pricing-banner" id="pricingBanner">
+            <div class="pricing-content">
+                <div class="pricing-left">
+                    <i class="fas fa-bolt"></i>
+                    <span>⚡ EARLY ACCESS PRICING ⚡</span>
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="pricing-right">
+                    <span class="original-price">$49.99</span>
+                    <span class="current-price">$10</span>
+                    <span class="lifetime">LIFETIME</span>
+                </div>
+            </div>
+            <div class="payment-details" id="paymentDetails">
+                <div class="wallet-info">
+                    <i class="fab fa-bitcoin"></i>
+                    <code class="wallet-address">bc1qqgjsumsw82804vscpeysz2te3zsx2jfzndawfk</code>
+                    <button class="copy-btn" onclick="copyWallet()">
+                        <i class="far fa-copy"></i>
+                    </button>
+                </div>
+                <p class="payment-note">Send $10 in BTC to activate PREMIUM access • Lifetime updates • Real-time prices</p>
+                <div class="payment-status" id="paymentStatus">
+                    <i class="fas fa-hourglass-half"></i> Waiting for payment...
+                </div>
+            </div>
+            <button class="activate-btn" id="activateBtn" onclick="showPayment()">
+                <i class="fas fa-lock"></i> ACTIVATE PREMIUM FOR $10
+            </button>
+        </div>
+
+        <!-- Main Dashboard (initially blurred) -->
+        <div class="dashboard-container" id="dashboardContainer">
+            <!-- Stats Cards with Neon Effect -->
+            <div class="stats-grid">
+                <div class="stat-card" data-glow="cyan">
+                    <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+                    <div class="stat-label">TOTAL PORTFOLIO</div>
+                    <div class="stat-value" id="totalPortfolio">$0.00</div>
+                    <div class="stat-change" id="portfolioChange">+0.00%</div>
+                </div>
+                
+                <div class="stat-card" data-glow="magenta">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-label">UNREALIZED GAIN</div>
+                    <div class="stat-value" id="unrealizedGain">$0.00</div>
+                    <div class="stat-change" id="gainChange">+0.00%</div>
+                </div>
+                
+                <div class="stat-card" data-glow="yellow">
+                    <div class="stat-icon"><i class="fas fa-file-invoice"></i></div>
+                    <div class="stat-label">TAX ESTIMATE</div>
+                    <div class="stat-value" id="totalTax">$0.00</div>
+                    <div class="stat-sub">Due: Dec 31, 2024</div>
+                </div>
+                
+                <div class="stat-card" data-glow="green">
+                    <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <div class="stat-label">TRANSACTIONS</div>
+                    <div class="stat-value" id="totalTransactions">0</div>
+                    <div class="stat-sub">Last 30 days: 0</div>
+                </div>
+            </div>
+
+            <!-- Country Selector - Premium Toggle -->
             <div class="country-selector">
-                <button class="country-btn active" data-country="IT">
-                    <img src="assets/flags/it.svg" alt="Italy" class="flag-icon"> Italy
-                </button>
-                <button class="country-btn" data-country="US">
-                    <img src="assets/flags/us.svg" alt="USA" class="flag-icon"> USA
-                </button>
-                <button class="country-btn" data-country="DE">
-                    <img src="assets/flags/de.svg" alt="Germany" class="flag-icon"> Germany
-                </button>
-                <button class="country-btn" data-country="GB">
-                    <img src="assets/flags/gb.svg" alt="UK" class="flag-icon"> UK
-                </button>
-                <button class="country-btn" data-country="IN">
-                    <img src="assets/flags/in.svg" alt="India" class="flag-icon"> India
-                </button>
-            </div>
-            <div class="action-buttons">
-                <button class="cyber-button" id="importCsvBtn">
-                    <i class="fas fa-file-import"></i> IMPORT CSV
-                </button>
-                <button class="cyber-button" id="addTransactionBtn">
-                    <i class="fas fa-plus"></i> ADD MANUAL
-                </button>
-                <button class="cyber-button" id="generatePdfBtn">
-                    <i class="fas fa-file-pdf"></i> GENERATE PDF
-                </button>
-            </div>
-        </div>
-
-        <!-- Main Dashboard Grid -->
-        <div class="dashboard-grid">
-            <!-- Transactions Table -->
-            <div class="cyber-card transactions-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-history"></i> TRANSACTIONS</h2>
-                    <div class="card-controls">
-                        <input type="text" id="searchInput" placeholder="Search..." class="cyber-input">
-                        <i class="fas fa-filter"></i>
-                    </div>
+                <div class="selector-label">
+                    <i class="fas fa-globe"></i> JURISDICTION
                 </div>
-                <div class="table-container">
-                    <table id="transactionsTable">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Buy/Sell</th>
-                                <th>Amount</th>
-                                <th>Price</th>
-                                <th>Total</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionsBody">
-                            <!-- Dynamic content -->
-                        </tbody>
-                    </table>
+                <div class="country-buttons">
+                    <button class="country-btn active" data-country="IT">
+                        <i class="fas fa-flag"></i> ITALY
+                        <span class="tax-badge">26%</span>
+                    </button>
+                    <button class="country-btn" data-country="US">
+                        <i class="fas fa-flag-usa"></i> USA
+                        <span class="tax-badge">0-37%</span>
+                    </button>
+                    <button class="country-btn" data-country="DE">
+                        <i class="fas fa-flag"></i> GERMANY
+                        <span class="tax-badge">0-45%</span>
+                    </button>
+                    <button class="country-btn" data-country="GB">
+                        <i class="fas fa-flag"></i> UK
+                        <span class="tax-badge">20-45%</span>
+                    </button>
+                    <button class="country-btn" data-country="IN">
+                        <i class="fas fa-flag"></i> INDIA
+                        <span class="tax-badge">30%</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Tax Summary Card -->
-            <div class="cyber-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-chart-pie"></i> TAX SUMMARY</h2>
-                    <i class="fas fa-calculator"></i>
+            <!-- Action Bar - Only GENERATE PDF works -->
+            <div class="action-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search transactions...">
                 </div>
-                <div class="tax-summary" id="taxSummary">
-                    <div class="tax-item">
-                        <span>Total Gain/Loss:</span>
-                        <span class="gain" id="totalGain">€0</span>
-                    </div>
-                    <div class="tax-item">
-                        <span>Taxable Amount:</span>
-                        <span id="taxableAmount">€0</span>
-                    </div>
-                    <div class="tax-item highlight">
-                        <span>Tax Due:</span>
-                        <span id="taxDue">€0</span>
-                    </div>
-                    <div class="tax-item">
-                        <span>Effective Rate:</span>
-                        <span id="effectiveRate">0%</span>
-                    </div>
-                    <div class="tax-notes" id="taxNotes">
-                        <!-- Dynamic notes per country -->
-                    </div>
-                </div>
-                <div class="chart-container" style="height: 200px;">
-                    <canvas id="taxChart"></canvas>
+                <div class="action-buttons">
+                    <button class="action-btn disabled" disabled>
+                        <i class="fas fa-file-import"></i> IMPORT CSV
+                        <span class="premium-tag">PREMIUM</span>
+                    </button>
+                    <button class="action-btn disabled" disabled>
+                        <i class="fas fa-plus"></i> ADD MANUAL
+                        <span class="premium-tag">PREMIUM</span>
+                    </button>
+                    <button class="action-btn primary" id="generatePdfBtn">
+                        <i class="fas fa-file-pdf"></i> GENERATE PDF
+                    </button>
                 </div>
             </div>
 
-            <!-- Portfolio Distribution -->
-            <div class="cyber-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-chart-bar"></i> PORTFOLIO</h2>
-                    <i class="fas fa-coins"></i>
-                </div>
-                <div class="chart-container" style="height: 250px;">
-                    <canvas id="portfolioChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Holding Periods -->
-            <div class="cyber-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-clock"></i> HOLDING PERIODS</h2>
-                    <i class="fas fa-hourglass-half"></i>
-                </div>
-                <div class="holding-list" id="holdingList">
-                    <!-- Dynamic content -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Scenario Calculator -->
-        <div class="cyber-card scenario-card">
-            <div class="card-header">
-                <h2><i class="fas fa-flask"></i> WHAT-IF SCENARIO</h2>
-                <i class="fas fa-robot"></i>
-            </div>
-            <div class="scenario-grid">
-                <div class="scenario-input">
-                    <label>Asset:</label>
-                    <select id="scenarioAsset" class="cyber-select">
-                        <option value="BTC">Bitcoin (BTC)</option>
-                        <option value="ETH">Ethereum (ETH)</option>
-                        <option value="USDT">Tether (USDT)</option>
-                    </select>
-                </div>
-                <div class="scenario-input">
-                    <label>Amount:</label>
-                    <input type="number" id="scenarioAmount" class="cyber-input" placeholder="0.00">
-                </div>
-                <div class="scenario-input">
-                    <label>Price:</label>
-                    <input type="number" id="scenarioPrice" class="cyber-input" placeholder="€">
-                </div>
-                <div class="scenario-input">
-                    <label>Country:</label>
-                    <select id="scenarioCountry" class="cyber-select">
-                        <option value="IT">Italy</option>
-                        <option value="US">USA</option>
-                        <option value="DE">Germany</option>
-                        <option value="GB">UK</option>
-                    </select>
-                </div>
-                <button class="cyber-button" id="calculateScenarioBtn">
-                    <i class="fas fa-calculator"></i> CALCULATE
-                </button>
-            </div>
-            <div id="scenarioResult" class="scenario-result">
-                <!-- Dynamic result -->
-            </div>
-        </div>
-
-        <!-- Add Transaction Modal -->
-        <div id="transactionModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>ADD TRANSACTION</h3>
-                    <span class="close">&times;</span>
-                </div>
-                <form id="transactionForm">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Date:</label>
-                            <input type="date" id="txDate" required class="cyber-input">
+            <!-- Main Grid -->
+            <div class="main-grid">
+                <!-- Transactions Table -->
+                <div class="glass-card transactions-panel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-history"></i> TRANSACTION HISTORY</h3>
+                        <div class="live-indicator">
+                            <span class="pulse-dot"></span>
+                            LIVE
                         </div>
-                        <div class="form-group">
-                            <label>Type:</label>
-                            <select id="txType" class="cyber-select">
-                                <option value="buy">Buy</option>
-                                <option value="sell">Sell</option>
-                                <option value="trade">Trade</option>
-                                <option value="staking">Staking Reward</option>
-                                <option value="airdrop">Airdrop</option>
+                    </div>
+                    <div class="table-container">
+                        <table id="transactionsTable">
+                            <thead>
+                                <tr>
+                                    <th>DATE</th>
+                                    <th>TYPE</th>
+                                    <th>ASSET</th>
+                                    <th>AMOUNT</th>
+                                    <th>PRICE</th>
+                                    <th>TOTAL</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsBody">
+                                <tr class="premium-placeholder">
+                                    <td colspan="7">
+                                        <i class="fas fa-lock"></i>
+                                        <span>Activate PREMIUM to view and add transactions</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tax Summary & Charts -->
+                <div class="right-panel">
+                    <!-- Tax Summary Card -->
+                    <div class="glass-card tax-summary-card">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-calculator"></i> TAX SUMMARY</h3>
+                            <span class="country-name" id="currentCountryName">ITALY</span>
+                        </div>
+                        <div class="tax-details">
+                            <div class="tax-row">
+                                <span>Total Gain/Loss:</span>
+                                <span class="gain-value" id="totalGain">$0.00</span>
+                            </div>
+                            <div class="tax-row">
+                                <span>Taxable Amount:</span>
+                                <span id="taxableAmount">$0.00</span>
+                            </div>
+                            <div class="tax-row highlight">
+                                <span>TAX DUE:</span>
+                                <span id="taxDue">$0.00</span>
+                            </div>
+                            <div class="tax-row">
+                                <span>Effective Rate:</span>
+                                <span id="effectiveRate">0.00%</span>
+                            </div>
+                        </div>
+                        <div class="tax-notes" id="taxNotes">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Select a jurisdiction to see tax rules</span>
+                        </div>
+                        <div class="mini-chart">
+                            <canvas id="taxChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Live Prices Card -->
+                    <div class="glass-card prices-card">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-chart-line"></i> LIVE PRICES</h3>
+                            <span class="coingecko-badge">
+                                <i class="fas fa-check-circle"></i> CoinGecko
+                            </span>
+                        </div>
+                        <div class="prices-list" id="pricesList">
+                            <div class="price-item">
+                                <span class="coin">BTC</span>
+                                <span class="price loading">Loading...</span>
+                                <span class="change">-</span>
+                            </div>
+                            <div class="price-item">
+                                <span class="coin">ETH</span>
+                                <span class="price loading">Loading...</span>
+                                <span class="change">-</span>
+                            </div>
+                            <div class="price-item">
+                                <span class="coin">BNB</span>
+                                <span class="price loading">Loading...</span>
+                                <span class="change">-</span>
+                            </div>
+                            <div class="price-item">
+                                <span class="coin">SOL</span>
+                                <span class="price loading">Loading...</span>
+                                <span class="change">-</span>
+                            </div>
+                        </div>
+                        <div class="update-time" id="updateTime">
+                            <i class="fas fa-sync-alt fa-spin"></i> Updating...
+                        </div>
+                    </div>
+
+                    <!-- Quick Scenario -->
+                    <div class="glass-card scenario-card">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-flask"></i> QUICK SCENARIO</h3>
+                        </div>
+                        <div class="scenario-inputs">
+                            <select class="scenario-select" id="scenarioAsset">
+                                <option value="BTC">Bitcoin (BTC)</option>
+                                <option value="ETH">Ethereum (ETH)</option>
+                                <option value="BNB">Binance Coin (BNB)</option>
+                                <option value="SOL">Solana (SOL)</option>
                             </select>
+                            <input type="number" id="scenarioAmount" placeholder="Amount" class="scenario-input">
+                            <button class="scenario-btn" id="calcScenarioBtn">
+                                <i class="fas fa-calculator"></i> CALCULATE
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label>Asset:</label>
-                            <input type="text" id="txAsset" placeholder="BTC" class="cyber-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Amount:</label>
-                            <input type="number" id="txAmount" step="any" class="cyber-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Price (€):</label>
-                            <input type="number" id="txPrice" step="any" class="cyber-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Fee (€):</label>
-                            <input type="number" id="txFee" step="any" value="0" class="cyber-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Notes:</label>
-                            <input type="text" id="txNotes" class="cyber-input">
+                        <div class="scenario-result" id="scenarioResult">
+                            <span class="placeholder">Enter amount to simulate tax</span>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="cyber-button">SAVE</button>
-                        <button type="button" class="cyber-button secondary" id="cancelModal">CANCEL</button>
-                    </div>
-                </form>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-left">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Data from CoinGecko • Updated every 60s</span>
+                </div>
+                <div class="footer-right">
+                    <a href="https://github.com/nutmegdev96" target="_blank"><i class="fab fa-github"></i></a>
+                    <a href="https://www.linkedin.com/in/simone-macis-7051983a3/" target="_blank"><i class="fab fa-linkedin"></i></a>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Footer -->
-        <div class="footer">
-            <p style="font-size: 1.2em; color: #00ffff;">✦ REAL-TIME TAX CALCULATOR ✦</p>
-            <p style="color: rgba(255,255,255,0.4); margin: 10px 0;">Data: CoinGecko • Tax rules v2024 • Local storage</p>
-            <div class="footer-links">
-                <a href="https://github.com/nutmegdev96" target="_blank"><i class="fab fa-github"></i></a>
-                <a href="https://www.linkedin.com/in/simone-macis-7051983a3/" target="_blank"><i class="fab fa-linkedin"></i></a>
+    <!-- Premium Activation Modal -->
+    <div class="modal" id="activationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-crown"></i> ACTIVATE PREMIUM</h3>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
             </div>
-            <div class="made-by">⚡ Made by nutmegdev ⚡</div>
+            <div class="modal-body">
+                <div class="payment-qr">
+                    <i class="fab fa-bitcoin" style="font-size: 48px; color: #f7931a;"></i>
+                </div>
+                <div class="payment-address">
+                    <code>bc1qqgjsumsw82804vscpeysz2te3zsx2jfzndawfk</code>
+                    <button class="copy-btn" onclick="copyWallet()">
+                        <i class="far fa-copy"></i>
+                    </button>
+                </div>
+                <p class="payment-instructions">
+                    Send exactly $10 in Bitcoin to the address above.<br>
+                    Your premium access will activate automatically after 1 confirmation.
+                </p>
+                <div class="payment-status" id="modalPaymentStatus">
+                    <i class="fas fa-hourglass-half"></i> Waiting for payment...
+                </div>
+                <button class="verify-btn" onclick="checkPayment()">
+                    <i class="fas fa-sync-alt"></i> I'VE SENT PAYMENT
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Scripts -->
-    <script src="scripts/countryConfigs.js"></script>
-    <script src="scripts/taxCalculator.js"></script>
+    <script src="scripts/coingecko.js"></script>
+    <script src="scripts/taxEngine.js"></script>
     <script src="scripts/app.js"></script>
 </body>
 </html>
