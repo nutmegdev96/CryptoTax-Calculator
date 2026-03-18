@@ -1,86 +1,100 @@
 // scripts/taxEngine.js
+// ============================================
+// Tax Calculation Engine
+// ============================================
 
 class TaxEngine {
     constructor() {
         this.transactions = this.loadTransactions();
-        this.country = 'IT';
-        this.premiumActive = localStorage.getItem('cryptotax_premium') === 'true';
+        this.currentCountry = 'IT';
         
-        // If no transactions exist, add sample data
+        // Add sample data if no transactions exist
         if (this.transactions.length === 0) {
             this.addSampleTransactions();
         }
     }
 
+    /**
+     * Load transactions from localStorage
+     */
     loadTransactions() {
-        const saved = localStorage.getItem('cryptotax_transactions');
-        return saved ? JSON.parse(saved) : [];
+        try {
+            const saved = localStorage.getItem('cryptotax_transactions');
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            console.error('Error loading transactions:', e);
+            return [];
+        }
     }
 
+    /**
+     * Save transactions to localStorage
+     */
     saveTransactions() {
-        localStorage.setItem('cryptotax_transactions', JSON.stringify(this.transactions));
+        try {
+            localStorage.setItem('cryptotax_transactions', JSON.stringify(this.transactions));
+        } catch (e) {
+            console.error('Error saving transactions:', e);
+        }
     }
 
+    /**
+     * Add sample transactions for demo
+     */
     addSampleTransactions() {
         const sampleTxs = [
             {
-                id: 'tx1',
+                id: this.generateId(),
                 date: '2024-01-15',
                 type: 'buy',
                 asset: 'BTC',
                 amount: 0.5,
                 price: 42000,
-                total: 21000,
                 fee: 10
             },
             {
-                id: 'tx2',
-                date: '2024-02-01',
+                id: this.generateId(),
+                date: '2024-01-20',
                 type: 'buy',
                 asset: 'ETH',
                 amount: 5,
                 price: 3200,
-                total: 16000,
                 fee: 8
             },
             {
-                id: 'tx3',
-                date: '2024-02-20',
+                id: this.generateId(),
+                date: '2024-02-01',
                 type: 'buy',
                 asset: 'BNB',
                 amount: 10,
                 price: 350,
-                total: 3500,
                 fee: 5
             },
             {
-                id: 'tx4',
-                date: '2024-03-10',
-                type: 'sell',
-                asset: 'BTC',
-                amount: 0.2,
-                price: 45000,
-                total: 9000,
-                fee: 5
-            },
-            {
-                id: 'tx5',
-                date: '2024-03-15',
+                id: this.generateId(),
+                date: '2024-02-15',
                 type: 'buy',
                 asset: 'SOL',
                 amount: 15,
                 price: 95,
-                total: 1425,
                 fee: 3
             },
             {
-                id: 'tx6',
-                date: '2024-03-20',
+                id: this.generateId(),
+                date: '2024-03-01',
+                type: 'sell',
+                asset: 'BTC',
+                amount: 0.2,
+                price: 45000,
+                fee: 5
+            },
+            {
+                id: this.generateId(),
+                date: '2024-03-10',
                 type: 'sell',
                 asset: 'ETH',
                 amount: 2,
                 price: 3350,
-                total: 6700,
                 fee: 4
             }
         ];
@@ -89,62 +103,177 @@ class TaxEngine {
         this.saveTransactions();
     }
 
-    addTransaction(transaction) {
-        transaction.id = crypto.randomUUID ? crypto.randomUUID() : 'tx_' + Date.now() + Math.random();
-        transaction.date = transaction.date || new Date().toISOString().split('T')[0];
-        transaction.total = transaction.amount * transaction.price;
-        this.transactions.push(transaction);
-        this.saveTransactions();
+    /**
+     * Generate unique ID for transaction
+     */
+    generateId() {
+        return 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
+    /**
+     * Add a new transaction
+     */
+    addTransaction(transaction) {
+        const newTx = {
+            id: this.generateId(),
+            date: transaction.date || new Date().toISOString().split('T')[0],
+            type: transaction.type || 'buy',
+            asset: transaction.asset.toUpperCase(),
+            amount: parseFloat(transaction.amount) || 0,
+            price: parseFloat(transaction.price) || 0,
+            fee: parseFloat(transaction.fee) || 0
+        };
+        
+        this.transactions.push(newTx);
+        this.saveTransactions();
+        return newTx;
+    }
+
+    /**
+     * Delete a transaction by ID
+     */
     deleteTransaction(id) {
         this.transactions = this.transactions.filter(t => t.id !== id);
         this.saveTransactions();
     }
 
+    /**
+     * Calculate tax based on country rules
+     */
     calculateTax(gain, country) {
         const rules = {
             IT: (g) => g > 2000 ? (g - 2000) * 0.26 : 0,
-            US: (g) => g * 0.15, // Simplified long-term
-            DE: (g) => g * 0.45, // Max rate
+            US: (g) => g * 0.15, // Simplified long-term rate
+            DE: (g) => g * 0.45, // Maximum rate
             GB: (g) => g > 3000 ? (g - 3000) * 0.20 : 0,
-            IN: (g) => g * 0.30
+            IN: (g) => g * 0.30,
+            ES: (g) => g * 0.23 // Simplified Spanish rate
         };
 
-        return rules[country] ? rules[country](gain) : 0;
+        const calculator = rules[country];
+        return calculator ? calculator(gain) : 0;
     }
 
+    /**
+     * Get tax notes for a country
+     */
     getTaxNotes(country) {
         const notes = {
-            IT: 'Italy: 26% on gains > €2,000. Crypto-to-crypto tax-free since 2023.',
-            US: 'USA: Long-term capital gains (held >1 year): 0-20%. Short-term: ordinary income rates.',
-            DE: 'Germany: Tax-free if held >1 year. Otherwise up to 45% income tax.',
-            GB: 'UK: First £3,000 tax-free. Basic rate 20%, higher rate 40%, additional 45%.',
-            IN: 'India: 30% flat tax on crypto gains + 1% TDS on transactions.'
+            IT: 'Italy: 26% on gains > €2,000. Crypto-to-crypto tax-free.',
+            US: 'USA: Long-term (held >1 year): 0-20%. Short-term: ordinary income.',
+            DE: 'Germany: Tax-free if held >1 year. Otherwise up to 45%.',
+            GB: 'UK: First £3,000 tax-free. Basic rate 20%, higher rate 40-45%.',
+            IN: 'India: 30% flat tax on crypto gains + 1% TDS.',
+            ES: 'Spain: Progressive from 19% to 28% on gains.'
         };
+        
         return notes[country] || 'Select a jurisdiction to see tax rules.';
     }
 
+    /**
+     * Calculate total gain/loss from all transactions
+     */
     calculateTotalGain() {
-        // Calculate based on actual transactions
         let totalGain = 0;
-        this.transactions.filter(t => t.type === 'sell').forEach(sell => {
-            // Simplified: find corresponding buys (FIFO)
-            const buys = this.transactions.filter(t => 
-                t.type === 'buy' && 
-                t.asset === sell.asset && 
-                new Date(t.date) <= new Date(sell.date)
+        
+        // Group by asset
+        const assets = {};
+        
+        this.transactions.forEach(tx => {
+            if (!assets[tx.asset]) {
+                assets[tx.asset] = [];
+            }
+            assets[tx.asset].push(tx);
+        });
+        
+        // Calculate gain for each asset using FIFO
+        Object.keys(assets).forEach(asset => {
+            const txs = assets[asset].sort((a, b) => 
+                new Date(a.date) - new Date(b.date)
             );
             
-            if (buys.length > 0) {
-                const avgBuyPrice = buys.reduce((sum, b) => sum + b.price, 0) / buys.length;
-                const gain = (sell.price - avgBuyPrice) * sell.amount;
-                totalGain += gain;
+            const buys = [];
+            txs.forEach(tx => {
+                if (tx.type === 'buy') {
+                    buys.push({
+                        amount: tx.amount,
+                        price: tx.price
+                    });
+                } else if (tx.type === 'sell') {
+                    let remainingAmount = tx.amount;
+                    let sellTotal = 0;
+                    
+                    while (remainingAmount > 0 && buys.length > 0) {
+                        const buy = buys[0];
+                        const usedAmount = Math.min(remainingAmount, buy.amount);
+                        
+                        const costBasis = usedAmount * buy.price;
+                        const sellValue = usedAmount * tx.price;
+                        const gain = sellValue - costBasis;
+                        
+                        sellTotal += gain;
+                        
+                        buy.amount -= usedAmount;
+                        remainingAmount -= usedAmount;
+                        
+                        if (buy.amount <= 0) {
+                            buys.shift();
+                        }
+                    }
+                    
+                    totalGain += sellTotal;
+                }
+            });
+        });
+        
+        return totalGain;
+    }
+
+    /**
+     * Get current holdings
+     */
+    getHoldings() {
+        const holdings = {};
+        
+        this.transactions.forEach(tx => {
+            if (!holdings[tx.asset]) {
+                holdings[tx.asset] = 0;
+            }
+            
+            if (tx.type === 'buy') {
+                holdings[tx.asset] += tx.amount;
+            } else if (tx.type === 'sell') {
+                holdings[tx.asset] -= tx.amount;
             }
         });
-        return totalGain || 4321.09; // Fallback to sample if no sells
+        
+        // Remove assets with zero holdings
+        Object.keys(holdings).forEach(asset => {
+            if (holdings[asset] <= 0) {
+                delete holdings[asset];
+            }
+        });
+        
+        return holdings;
+    }
+
+    /**
+     * Calculate portfolio value using current prices
+     */
+    calculatePortfolioValue(priceGetter) {
+        const holdings = this.getHoldings();
+        let totalValue = 0;
+        
+        Object.keys(holdings).forEach(asset => {
+            const price = priceGetter(asset);
+            if (price) {
+                totalValue += holdings[asset] * price;
+            }
+        });
+        
+        return totalValue;
     }
 }
 
-// Initialize global instance
+// Create global instance
 const taxEngine = new TaxEngine();
