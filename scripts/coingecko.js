@@ -1,6 +1,6 @@
 // scripts/coingecko.js
 // ============================================
-// CoinGecko API Integration - FULL LIST
+// CoinGecko API Integration
 // ============================================
 
 class CoinGeckoAPI {
@@ -8,10 +8,10 @@ class CoinGeckoAPI {
         this.baseURL = 'https://api.coingecko.com/api/v3';
         this.cache = {
             prices: null,
-            top100: null,
             timestamp: null
         };
         this.updateInterval = 60000; // 60 seconds
+        this.pollingInterval = null;
         
         // Default top coins to show
         this.defaultCoins = [
@@ -49,7 +49,7 @@ class CoinGeckoAPI {
             for (const coin of this.defaultCoins) {
                 const data = response.data[coin.id];
                 if (data) {
-                    prices[coin.symbol] = {  // Use symbol as key!
+                    prices[coin.symbol] = {
                         symbol: coin.symbol,
                         name: coin.name,
                         id: coin.id,
@@ -76,69 +76,21 @@ class CoinGeckoAPI {
     }
 
     /**
-     * Search for coins
-     */
-    async searchCoins(query) {
-        if (!query || query.length < 2) return [];
-        
-        try {
-            const response = await axios.get(
-                `${this.baseURL}/search?query=${query}`
-            );
-            
-            return response.data.coins.slice(0, 10).map(coin => ({
-                id: coin.id,
-                symbol: coin.symbol.toUpperCase(),
-                name: coin.name,
-                thumb: coin.thumb
-            }));
-        } catch (error) {
-            console.error('Search error:', error);
-            return [];
-        }
-    }
-
-    /**
-     * Get price for a specific coin by symbol
-     */
-    async getPriceBySymbol(symbol) {
-        symbol = symbol.toUpperCase();
-        
-        // Check cache first
-        if (this.cache.prices && this.cache.prices[symbol]) {
-            return this.cache.prices[symbol];
-        }
-        
-        // If not in cache, fetch it
-        try {
-            const coinId = this.symbolMap[symbol];
-            if (!coinId) return null;
-            
-            const response = await axios.get(
-                `${this.baseURL}/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true`
-            );
-            
-            const data = response.data[coinId];
-            if (data) {
-                return {
-                    symbol: symbol,
-                    usd: data.usd,
-                    change24h: data.usd_24h_change || 0
-                };
-            }
-        } catch (error) {
-            console.error('Error fetching price:', error);
-        }
-        
-        return null;
-    }
-
-    /**
      * Update the UI with price data
      */
     updateUI(prices) {
         const pricesList = document.getElementById('pricesList');
         if (!pricesList) return;
+
+        // Se non ci sono prezzi, mostra il messaggio di caricamento
+        if (!prices || Object.keys(prices).length === 0) {
+            pricesList.innerHTML = `
+                <div class="price-item">
+                    <span class="coin" style="color: #00f7ff;">Loading...</span>
+                </div>
+            `;
+            return;
+        }
 
         pricesList.innerHTML = '';
 
@@ -190,16 +142,43 @@ class CoinGeckoAPI {
                 </div>
             `;
         }
+        
+        const updateTime = document.getElementById('updateTime');
+        if (updateTime) {
+            updateTime.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: #ff3b3b;"></i> Connection error`;
+        }
     }
 
     /**
-     * Start polling
+     * Start polling - CHIAMATA QUANDO LA DASHBOARD È VISIBILE
      */
     startPolling() {
+        console.log('🚀 Starting CoinGecko polling...');
+        
+        // Fetch immediately
         this.fetchPrices();
-        setInterval(() => {
+        
+        // Clear any existing interval
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+        }
+        
+        // Set up new interval
+        this.pollingInterval = setInterval(() => {
+            console.log('⏳ Fetching updated prices...');
             this.fetchPrices();
         }, this.updateInterval);
+    }
+
+    /**
+     * Stop polling - OPZIONALE, per pulire quando serve
+     */
+    stopPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+            console.log('🛑 CoinGecko polling stopped');
+        }
     }
 
     /**
@@ -216,3 +195,12 @@ class CoinGeckoAPI {
 
 // Create global instance
 const coingecko = new CoinGeckoAPI();
+
+// Auto-start polling when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('📊 Initializing CoinGecko...');
+    // Breve ritardo per permettere alla pagina di caricarsi
+    setTimeout(() => {
+        coingecko.startPolling();
+    }, 500);
+});
