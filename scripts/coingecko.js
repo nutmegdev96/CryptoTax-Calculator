@@ -37,49 +37,15 @@ class CoinGeckoAPI {
                 timestamp: Date.now()
             };
             
-            this.updateUI(prices);
+            // Call updateUI if it exists (will be overridden by app.js)
+            if (typeof this.updateUI === 'function') {
+                this.updateUI(prices);
+            }
+            
             return prices;
         } catch (error) {
             console.error('CoinGecko API Error:', error);
             this.showError();
-        }
-    }
-
-    updateUI(prices) {
-        const pricesList = document.getElementById('pricesList');
-        if (!pricesList) return;
-
-        const coinNames = {
-            'bitcoin': 'BTC',
-            'ethereum': 'ETH',
-            'binancecoin': 'BNB',
-            'solana': 'SOL'
-        };
-
-        pricesList.innerHTML = '';
-        
-        for (const [coin, data] of Object.entries(prices)) {
-            const symbol = coinNames[coin];
-            const price = data.usd;
-            const change = data.change24h;
-            
-            const item = document.createElement('div');
-            item.className = 'price-item';
-            item.innerHTML = `
-                <span class="coin">${symbol}</span>
-                <span class="price">$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                <span class="change ${change >= 0 ? 'positive' : 'negative'}">
-                    ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
-                </span>
-            `;
-            
-            pricesList.appendChild(item);
-        }
-
-        const updateTime = document.getElementById('updateTime');
-        if (updateTime) {
-            const time = new Date().toLocaleTimeString();
-            updateTime.innerHTML = `<i class="fas fa-sync-alt"></i> Updated: ${time}`;
         }
     }
 
