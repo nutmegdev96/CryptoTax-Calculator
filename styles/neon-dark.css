@@ -1,3 +1,40 @@
+/* Title styles */
+.premium-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #ffd700, #ff9900);
+    color: #000;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.main-title {
+    font-size: 3.5em;
+    font-weight: 800;
+    letter-spacing: 5px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #00ffff, #ff00ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 1em;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+}
+
+.neon-text {
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+}
+
 /* styles/neon-dark.css */
 :root {
     --bg-primary: #0a0b0e;
