@@ -484,4 +484,39 @@
         flex-wrap: wrap;
         gap: 10px;
     }
+    /* Make sure login container is visible by default */
+.login-container {
+    display: flex !important;
+}
+
+.dashboard-wrapper {
+    display: none;
+}
+
+/* Fix for hidden elements */
+.hidden {
+    display: none !important;
+}
+
+/* Ensure proper stacking */
+.modal.show {
+    display: flex !important;
+    z-index: 10000;
+}
+
+/* Fix for status messages */
+.status-message {
+    transition: all 0.3s ease;
+}
+
+/* Ensure buttons are clickable */
+.access-btn, .action-btn, .country-btn, .scenario-btn {
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+}
+
+/* Fix for pricing banner */
+.pricing-banner {
+    transition: all 0.3s ease;
 }
