@@ -3,7 +3,7 @@
 // ============================================
 // CONFIGURATION
 // ============================================
-const ADMIN_EMAIL = 'macissimon@gmail.com'; // 
+const ADMIN_EMAIL = 'macissimon@gmail.com'; // Admin gets automatic premium
 
 // Global state
 let currentUser = null;
@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginContainer) loginContainer.style.display = 'flex';
     if (dashboardWrapper) dashboardWrapper.style.display = 'none';
     if (headerTop) headerTop.style.display = 'none';
+    
+    // RESET the status message to default
+    resetStatusMessage();
     
     console.log('-> Initial state: Login visible, Dashboard hidden.');
 
@@ -52,6 +55,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================
+// HELPER TO RESET STATUS MESSAGE
+// ============================================
+function resetStatusMessage() {
+    const statusMsg = document.querySelector('.status-message');
+    if (statusMsg) {
+        statusMsg.style.borderColor = '#00f7ff';
+        statusMsg.innerHTML = `<i class="fas fa-lock" style="color: #00f7ff;"></i>
+                               <span style="color: #a0a0b0;">Enter your email to continue</span>`;
+    }
+}
+
+// ============================================
 // LOGIN FUNCTIONS - SIMPLE EMAIL ONLY
 // ============================================
 function setupLoginListener() {
@@ -65,6 +80,11 @@ function setupLoginListener() {
     if (emailInput) {
         emailInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleLogin();
+        });
+        
+        // Also reset message when user starts typing
+        emailInput.addEventListener('input', () => {
+            resetStatusMessage();
         });
     }
 }
@@ -123,6 +143,9 @@ function showLogin() {
     if (loginContainer) loginContainer.style.display = 'flex';
     if (dashboardWrapper) dashboardWrapper.style.display = 'none';
     if (headerTop) headerTop.style.display = 'none';
+    
+    // Reset message when showing login
+    resetStatusMessage();
 }
 
 function showDashboard() {
