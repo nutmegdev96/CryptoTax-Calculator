@@ -65,4 +65,60 @@ const countryConfigs = {
     },
     ES: {
         name: 'Spain',
-        currency: '
+        currency: 'EUR',
+        flag: '🇪🇸',
+        taxRules: {
+            rates: [0.19, 0.21, 0.23, 0.27, 0.28], // Progressive up to 28%
+            method: 'FIFO',
+            color: '#ff6600',
+            notes: 'Progressive rates from 19% to 28% on gains.'
+        }
+    }
+};
+
+// Helper functions per paese
+const taxHelpers = {
+    calculateItaly: (gain, totalIncome = 0) => {
+        if (gain <= 2000) return 0;
+        return (gain - 2000) * 0.26;
+    },
+    
+    calculateUSA: (gain, holdingDays, income = 50000) => {
+        if (holdingDays < 365) {
+            // Short-term: ordinary income rates (simplified)
+            if (income + gain <= 11000) return gain * 0.10;
+            if (income + gain <= 44725) return gain * 0.12;
+            if (income + gain <= 95375) return gain * 0.22;
+            return gain * 0.24; // Simplified
+        } else {
+            // Long-term
+            if (income <= 44625) return gain * 0;
+            if (income <= 492300) return gain * 0.15;
+            return gain * 0.20;
+        }
+    },
+    
+    calculateGermany: (gain, holdingDays) => {
+        if (holdingDays > 365) return 0;
+        return gain * 0.45; // Max rate (simplified)
+    },
+    
+    calculateUK: (gain) => {
+        if (gain <= 3000) return 0;
+        // Simplified: assume basic rate for first £37,700 above allowance
+        const taxable = gain - 3000;
+        if (taxable <= 37700) return taxable * 0.20;
+        return (37700 * 0.20) + ((taxable - 37700) * 0.40);
+    },
+    
+    calculateIndia: (gain) => {
+        return gain * 0.30;
+    },
+    
+    calculateSpain: (gain) => {
+        if (gain <= 6000) return gain * 0.19;
+        if (gain <= 50000) return gain * 0.21;
+        if (gain <= 200000) return gain * 0.23;
+        return gain * 0.27; // Simplified
+    }
+};
