@@ -27,18 +27,18 @@
     <canvas id="particleCanvas" class="particles"></canvas>
     
     <div class="container">
-        <!-- Header with subtle branding -->
-        <div class="header-top">
+        <!-- Header with subtle branding (visible only when logged in) -->
+        <div class="header-top" id="headerTop" style="display: none;">
             <div class="beta-badge">
                 <i class="fas fa-code-branch"></i> PRIVATE BETA v0.1
             </div>
             <div class="status-indicator">
                 <span class="pulse-dot"></span>
-                <span class="status-text">1,247 waitlist spots left</span>
+                <span class="status-text" id="waitlistCount">1,247 waitlist spots left</span>
             </div>
         </div>
 
-        <!-- MAIN LOGIN SCREEN - EPIC ENTRANCE -->
+        <!-- MAIN LOGIN SCREEN - ALWAYS VISIBLE INITIALLY -->
         <div class="login-container" id="loginContainer">
             <div class="login-card">
                 <!-- Animated Background -->
@@ -62,7 +62,7 @@
                     </div>
 
                     <div class="login-body">
-                        <!-- Invite Code Section (NEW) -->
+                        <!-- Invite Code Section -->
                         <div class="invite-section">
                             <div class="invite-label">
                                 <i class="fas fa-ticket-alt"></i>
@@ -85,7 +85,7 @@
                                 <span>EMAIL ADDRESS</span>
                             </div>
                             <div class="email-input-group">
-                                <input type="email" id="loginEmail" class="email-input" placeholder="your@email.com" value="macissimon@gmail.com">
+                                <input type="email" id="loginEmail" class="email-input" placeholder="your@email.com">
                                 <div class="input-glow"></div>
                             </div>
                         </div>
@@ -101,7 +101,7 @@
                         <div class="login-status" id="loginStatus">
                             <div class="status-message">
                                 <i class="fas fa-lock"></i>
-                                <span>1,247 pioneers ahead of you</span>
+                                <span id="statusText">1,247 pioneers ahead of you</span>
                             </div>
                         </div>
 
@@ -130,7 +130,7 @@
             </div>
         </div>
 
-        <!-- MAIN DASHBOARD (hidden until access) -->
+        <!-- MAIN DASHBOARD (hidden until access granted) -->
         <div class="dashboard-wrapper" id="dashboardWrapper" style="display: none;">
             <!-- User Header -->
             <div class="dashboard-header">
@@ -217,7 +217,7 @@
             <div class="action-bar">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search transactions...">
+                    <input type="text" id="searchInput" placeholder="Search transactions...">
                 </div>
                 <div class="action-buttons">
                     <button class="action-btn" id="importCsvBtn"><i class="fas fa-file-import"></i> IMPORT</button>
@@ -235,7 +235,7 @@
                         <span class="live-badge"><span class="pulse-dot"></span> LIVE</span>
                     </div>
                     <div class="table-container">
-                        <table>
+                        <table id="transactionsTable">
                             <thead>
                                 <tr><th>DATE</th><th>TYPE</th><th>ASSET</th><th>AMOUNT</th><th>PRICE</th><th>TOTAL</th><th></th></tr>
                             </thead>
@@ -356,6 +356,7 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="scripts/coingecko.js"></script>
     <script src="scripts/taxEngine.js"></script>
     <script src="scripts/app.js"></script>
