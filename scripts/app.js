@@ -1,29 +1,146 @@
 // scripts/app.js
 
+// Admin email that gets free premium access
+const ADMIN_EMAIL = 'macissimon@gmail.com';
+
+// Check if user is logged in
+let currentUser = null;
+let isPremium = false;
+
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 CryptoTax Premium initialized');
     
-    // Initialize global variables
-    window.currentCountry = 'IT';
-    window.premiumActive = localStorage.getItem('cryptotax_premium') === 'true';
+    // Check for existing session
+    const savedUser = localStorage.getItem('cryptotax_user');
+    if (savedUser) {
+        currentUser = savedUser;
+        isPremium = savedUser === ADMIN_EMAIL || localStorage.getItem('cryptotax_premium') === 'true';
+        showDashboard();
+    } else {
+        showLogin();
+    }
     
     // Start CoinGecko polling
     if (typeof coingecko !== 'undefined') {
         coingecko.startPolling();
-    } else {
-        console.error('CoinGecko API not loaded');
     }
     
-    // Update UI based on premium status
-    updatePremiumStatus();
+    // Setup login button
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', handleLogin);
+    }
     
+    // Allow Enter key on email input
+    const loginEmail = document.getElementById('loginEmail');
+    if (loginEmail) {
+        loginEmail.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
+        });
+    }
+});
+
+function showLogin() {
+    document.getElementById('loginModal').style.display = 'flex';
+    document.getElementById('mainHeader').style.display = 'none';
+    document.getElementById('dashboardContainer').style.display = 'none';
+    document.getElementById('pricingBanner').style.display = 'none';
+}
+
+function showDashboard() {
+    document.getElementById('loginModal').style.display = 'none';
+    document.getElementById('mainHeader').style.display = 'block';
+    document.getElementById('dashboardContainer').style.display = 'block';
+    
+    // Show pricing banner only for non-admin non-premium users
+    if (currentUser !== ADMIN_EMAIL && !isPremium) {
+        document.getElementById('pricingBanner').style.display = 'block';
+    }
+    
+    // Update user section in header
+    updateUserSection();
+    
+    // Initialize dashboard
+    initializeDashboard();
+}
+
+function updateUserSection() {
+    const userSection = document.getElementById('userSection');
+    if (!userSection) return;
+    
+    const isAdmin = currentUser === ADMIN_EMAIL;
+    const status = isAdmin ? '👑 ADMIN' : (isPremium ? '⭐ PREMIUM' : '👤 FREE');
+    
+    userSection.innerHTML = `
+        <div class="user-info">
+            <span class="user-email">${currentUser}</span>
+            <span class="user-status ${isAdmin ? 'admin' : (isPremium ? 'premium' : 'free')}">${status}</span>
+            <button class="logout-btn" onclick="showLogoutModal()">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    `;
+}
+
+function handleLogin() {
+    const emailInput = document.getElementById('loginEmail');
+    const email = emailInput.value.trim();
+    
+    if (!email || !email.includes('@')) {
+        alert('Please enter a valid email address');
+        return;
+    }
+    
+    // Store user
+    currentUser = email;
+    localStorage.setItem('cryptotax_user', email);
+    
+    // Check if admin
+    if (email === ADMIN_EMAIL) {
+        isPremium = true;
+        localStorage.setItem('cryptotax_premium', 'true');
+    } else {
+        isPremium = localStorage.getItem('cryptotax_premium') === 'true';
+    }
+    
+    showDashboard();
+}
+
+function showLogoutModal() {
+    document.getElementById('logoutModal').classList.add('show');
+}
+
+function closeLogoutModal() {
+    document.getElementById('logoutModal').classList.remove('show');
+}
+
+function logout() {
+    // Clear user data
+    currentUser = null;
+    isPremium = false;
+    localStorage.removeItem('cryptotax_user');
+    // Keep premium status if it was purchased? No, clear it
+    // localStorage.removeItem('cryptotax_premium');
+    
+    closeLogoutModal();
+    showLogin();
+}
+
+function initializeDashboard() {
     // Setup all event listeners
     setupEventListeners();
     
     // Load preview data
     loadPreviewData();
-});
+    
+    // Load transactions if premium
+    if (isPremium) {
+        loadUserTransactions();
+    }
+}
 
 function setupEventListeners() {
     // Country selector
@@ -101,19 +218,6 @@ function setupEventListeners() {
     }
 }
 
-function updatePremiumStatus() {
-    const dashboard = document.getElementById('dashboardContainer');
-    const pricingBanner = document.getElementById('pricingBanner');
-    
-    if (window.premiumActive) {
-        if (dashboard) dashboard.classList.remove('blurred');
-        if (pricingBanner) pricingBanner.style.display = 'none';
-        loadUserTransactions();
-    } else {
-        if (dashboard) dashboard.classList.add('blurred');
-    }
-}
-
 function showPaymentModal() {
     const modal = document.getElementById('activationModal');
     if (modal) {
@@ -127,7 +231,6 @@ function showPaymentModal() {
     }
 }
 
-// Make functions globally available
 window.showPaymentModal = showPaymentModal;
 
 function closeModal() {
@@ -164,10 +267,17 @@ function checkPayment() {
         `;
         
         setTimeout(() => {
-            window.premiumActive = true;
+            isPremium = true;
             localStorage.setItem('cryptotax_premium', 'true');
             closeModal();
-            updatePremiumStatus();
+            
+            // Hide pricing banner
+            document.getElementById('pricingBanner').style.display = 'none';
+            
+            // Update user section
+            updateUserSection();
+            
+            alert('🎉 PREMIUM ACTIVATED! Enjoy all features.');
         }, 2000);
     }, 3000);
 }
@@ -175,7 +285,7 @@ function checkPayment() {
 window.checkPayment = checkPayment;
 
 function importCSV() {
-    if (!window.premiumActive) {
+    if (!isPremium) {
         alert('⚡ PREMIUM FEATURE ⚡\n\nPlease activate PREMIUM to import CSV files.');
         showPaymentModal();
         return;
@@ -193,8 +303,25 @@ function importCSV() {
                 header: true,
                 complete: (results) => {
                     console.log('CSV imported:', results.data);
+                    
+                    // Add transactions to taxEngine
+                    if (typeof taxEngine !== 'undefined') {
+                        results.data.forEach(row => {
+                            if (row.date && row.type && row.asset) {
+                                taxEngine.addTransaction({
+                                    date: row.date,
+                                    type: row.type.toLowerCase(),
+                                    asset: row.asset.toUpperCase(),
+                                    amount: parseFloat(row.amount) || 0,
+                                    price: parseFloat(row.price) || 0,
+                                    fee: parseFloat(row.fee) || 0
+                                });
+                            }
+                        });
+                    }
+                    
                     alert(`✅ Imported ${results.data.length} transactions!`);
-                    // Here you would process and add the transactions
+                    loadUserTransactions();
                 },
                 error: (error) => {
                     alert('❌ Error parsing CSV: ' + error);
@@ -207,30 +334,51 @@ function importCSV() {
 }
 
 function openModal() {
-    if (!window.premiumActive) {
+    if (!isPremium) {
         alert('⚡ PREMIUM FEATURE ⚡\n\nPlease activate PREMIUM to add manual transactions.');
         showPaymentModal();
         return;
     }
     
-    // Create a simple modal or prompt for demo
+    // Simple prompt for demo
     const date = prompt('Enter date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
     if (!date) return;
     
-    const type = prompt('Enter type (buy/sell/trade):', 'buy');
-    if (!type) return;
+    const type = prompt('Enter type (buy/sell):', 'buy');
+    if (!type || !['buy', 'sell'].includes(type.toLowerCase())) {
+        alert('Type must be "buy" or "sell"');
+        return;
+    }
     
-    const asset = prompt('Enter asset (e.g., BTC):', 'BTC');
+    const asset = prompt('Enter asset (e.g., BTC, ETH):', 'BTC').toUpperCase();
     if (!asset) return;
     
-    const amount = prompt('Enter amount:', '0.1');
-    if (!amount) return;
+    const amount = parseFloat(prompt('Enter amount:', '0.1'));
+    if (isNaN(amount) || amount <= 0) {
+        alert('Invalid amount');
+        return;
+    }
     
-    const price = prompt('Enter price in USD:', '50000');
-    if (!price) return;
+    const price = parseFloat(prompt('Enter price in USD:', '50000'));
+    if (isNaN(price) || price <= 0) {
+        alert('Invalid price');
+        return;
+    }
+    
+    // Add transaction
+    if (typeof taxEngine !== 'undefined') {
+        taxEngine.addTransaction({
+            date: date,
+            type: type.toLowerCase(),
+            asset: asset,
+            amount: amount,
+            price: price,
+            fee: 0
+        });
+    }
     
     alert(`✅ Transaction added: ${type} ${amount} ${asset} at $${price}`);
-    // Here you would actually add the transaction
+    loadUserTransactions();
 }
 
 function generatePDF() {
@@ -247,10 +395,11 @@ function generatePDF() {
     doc.setTextColor(0, 247, 255);
     doc.text('CRYPTOTAX REPORT', 105, 20, { align: 'center' });
     
-    // Add date
-    doc.setFontSize(12);
+    // Add user info
+    doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 105, 30, { align: 'center' });
+    doc.text(`User: ${currentUser}`, 105, 30, { align: 'center' });
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 105, 35, { align: 'center' });
     
     // Add tax summary
     doc.setFontSize(16);
@@ -268,21 +417,30 @@ function generatePDF() {
     doc.text(`Tax Due: ${taxDue}`, 20, 85);
     doc.text(`Effective Rate: ${effectiveRate}`, 20, 95);
     
-    // Add note about premium
-    if (!window.premiumActive) {
+    // Add transactions if premium
+    if (isPremium && typeof taxEngine !== 'undefined' && taxEngine.transactions.length > 0) {
+        doc.setFontSize(14);
+        doc.text('Recent Transactions', 20, 115);
+        
+        let y = 125;
+        doc.setFontSize(8);
+        taxEngine.transactions.slice(0, 5).forEach((tx, i) => {
+            if (y > 250) return; // Don't go off page
+            doc.text(`${tx.date} | ${tx.type.toUpperCase()} | ${tx.amount} ${tx.asset} @ $${tx.price}`, 20, y);
+            y += 5;
+        });
+        
+        if (taxEngine.transactions.length > 5) {
+            doc.text(`... and ${taxEngine.transactions.length - 5} more transactions`, 20, y);
+        }
+    } else {
         doc.setFontSize(10);
         doc.setTextColor(255, 215, 0);
         doc.text('⚡ Activate PREMIUM for detailed transaction history ⚡', 105, 120, { align: 'center' });
     }
     
     // Save PDF
-    doc.save('cryptotax-report.pdf');
-    
-    if (!window.premiumActive) {
-        setTimeout(() => {
-            alert('⚡ PREMIUM FEATURE ⚡\n\nGet detailed PDF reports with full transaction history by activating PREMIUM!');
-        }, 500);
-    }
+    doc.save(`cryptotax-report-${Date.now()}.pdf`);
 }
 
 function calculateScenario() {
@@ -323,7 +481,7 @@ function calculateScenario() {
 }
 
 function filterTransactions(searchTerm) {
-    if (!window.premiumActive) return;
+    if (!isPremium) return;
     console.log('Searching:', searchTerm);
     // Implement transaction filtering here
 }
@@ -399,7 +557,7 @@ function updateTaxChart(gain, tax) {
 }
 
 function loadUserTransactions() {
-    if (!window.premiumActive) return;
+    if (!isPremium) return;
     
     const tbody = document.getElementById('transactionsBody');
     if (!tbody) return;
@@ -434,13 +592,23 @@ function loadUserTransactions() {
             </td>
         </tr>
     `).join('');
+    
+    // Update transaction count
+    const totalTransactions = document.getElementById('totalTransactions');
+    if (totalTransactions) {
+        totalTransactions.textContent = transactions.length;
+    }
 }
 
 // Make functions globally available for onclick handlers
 window.deleteTransaction = (id) => {
-    if (typeof taxEngine !== 'undefined') {
+    if (typeof taxEngine !== 'undefined' && isPremium) {
         taxEngine.deleteTransaction(id);
         loadUserTransactions();
         alert('Transaction deleted');
     }
 };
+
+window.showLogoutModal = showLogoutModal;
+window.closeLogoutModal = closeLogoutModal;
+window.logout = logout;
