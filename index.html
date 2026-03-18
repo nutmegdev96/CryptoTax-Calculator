@@ -34,11 +34,11 @@
             </div>
             <div class="status-indicator">
                 <span class="pulse-dot"></span>
-                <span class="status-text" id="waitlistCount">1,247 waitlist spots left</span>
+                <span class="status-text" id="waitlistCount">1,247 spots left</span>
             </div>
         </div>
 
-        <!-- MAIN LOGIN SCREEN - ALWAYS VISIBLE INITIALLY -->
+        <!-- MAIN LOGIN SCREEN - EMAIL ONLY -->
         <div class="login-container" id="loginContainer">
             <div class="login-card">
                 <!-- Animated Background -->
@@ -62,30 +62,14 @@
                     </div>
 
                     <div class="login-body">
-                        <!-- Invite Code Section -->
-                        <div class="invite-section">
-                            <div class="invite-label">
-                                <i class="fas fa-ticket-alt"></i>
-                                <span>INVITE CODE</span>
-                            </div>
-                            <div class="invite-input-group">
-                                <input type="text" id="inviteCode" class="invite-input" placeholder="XXXX-XXXX" maxlength="9" autocomplete="off">
-                                <div class="input-glow"></div>
-                            </div>
-                            <div class="invite-hint">
-                                <i class="fas fa-info-circle"></i>
-                                <span>Join waitlist at cryptotax.io to get code</span>
-                            </div>
-                        </div>
-
-                        <!-- Email Section -->
+                        <!-- EMAIL SECTION - ONLY FIELD -->
                         <div class="email-section">
                             <div class="email-label">
                                 <i class="fas fa-envelope"></i>
                                 <span>EMAIL ADDRESS</span>
                             </div>
                             <div class="email-input-group">
-                                <input type="email" id="loginEmail" class="email-input" placeholder="your@email.com">
+                                <input type="email" id="loginEmail" class="email-input" placeholder="your@email.com" value="macissimon@gmail.com">
                                 <div class="input-glow"></div>
                             </div>
                         </div>
@@ -101,11 +85,11 @@
                         <div class="login-status" id="loginStatus">
                             <div class="status-message">
                                 <i class="fas fa-lock"></i>
-                                <span id="statusText">1,247 pioneers ahead of you</span>
+                                <span id="statusText">Enter your email to continue</span>
                             </div>
                         </div>
 
-                        <!-- Admin Note (hidden by default) -->
+                        <!-- Admin Note (hidden by default, shown for admin login) -->
                         <div class="admin-note hidden" id="adminNote">
                             <i class="fas fa-crown"></i>
                             <span>Admin access granted · Welcome back Simone</span>
