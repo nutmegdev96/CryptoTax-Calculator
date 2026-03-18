@@ -2,62 +2,48 @@
 
 // ============================================
 // CONFIGURATION
-//============================================
-const ADMIN_EMAIL = 'macissimon@gmail.com';
-const ADMIN_CODE = 'ADMIN-2024';
-const VALID_CODES = ['CRYPTO-2024', 'BETA-101', 'WHALE-777']; // Valid beta codes
+// ============================================
+const ADMIN_EMAIL = 'macissimon@gmail.com'; // 
 
 // Global state
 let currentUser = null;
 let isPremium = false;
-let inviteCode = '';
 let currentCountry = 'IT';
 
 // ============================================
-// INITIALIZATION - FIXED AND ROBUST
+// INITIALIZATION
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Starting CryptoTax Private Beta...');
+    console.log('🚀 Starting CryptoTax...');
 
-    // 1. Get references to main elements
+    // Get references to main elements
     const loginContainer = document.getElementById('loginContainer');
     const dashboardWrapper = document.getElementById('dashboardWrapper');
     const headerTop = document.getElementById('headerTop');
 
-    // 2. FORCE initial view: login visible, dashboard hidden
+    // FORCE initial view: login visible, dashboard hidden
     if (loginContainer) loginContainer.style.display = 'flex';
     if (dashboardWrapper) dashboardWrapper.style.display = 'none';
     if (headerTop) headerTop.style.display = 'none';
+    
     console.log('-> Initial state: Login visible, Dashboard hidden.');
 
-    // 3. Check for an existing session in localStorage
+    // Check for existing session
     const savedUser = localStorage.getItem('cryptotax_user');
-    const savedCode = localStorage.getItem('cryptotax_code');
-    console.log('Found saved session?', { user: savedUser, code: savedCode });
-
-    // 4. If a session exists, VALIDATE it before showing the dashboard
-    if (savedUser && savedCode) {
-        const isValidCode = savedCode === ADMIN_CODE || VALID_CODES.includes(savedCode);
-        if (isValidCode) {
-            console.log('-> Valid session found, showing dashboard.');
-            currentUser = savedUser;
-            inviteCode = savedCode;
-            isPremium = (savedUser === ADMIN_EMAIL) || (localStorage.getItem('cryptotax_premium') === 'true');
-            showDashboard();
-        } else {
-            console.log('-> Invalid session, removing it.');
-            localStorage.removeItem('cryptotax_user');
-            localStorage.removeItem('cryptotax_code');
-            // Login is already visible, nothing else to do
-        }
+    
+    if (savedUser) {
+        console.log('-> Found existing session for:', savedUser);
+        currentUser = savedUser;
+        isPremium = (savedUser === ADMIN_EMAIL) || (localStorage.getItem('cryptotax_premium') === 'true');
+        showDashboard();
     } else {
-        console.log('-> No session, login already visible.');
+        console.log('-> No session, showing login.');
     }
 
-    // 5. Setup login event listeners
-    setupLoginListeners();
+    // Setup login listener
+    setupLoginListener();
 
-    // 6. Start CoinGecko polling (will run in background)
+    // Start CoinGecko polling (will run in background)
     if (typeof coingecko !== 'undefined') {
         coingecko.startPolling();
     } else {
@@ -66,66 +52,53 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================
-// LOGIN FUNCTIONS
+// LOGIN FUNCTIONS - SIMPLE EMAIL ONLY
 // ============================================
-function setupLoginListeners() {
+function setupLoginListener() {
     const loginBtn = document.getElementById('loginBtn');
-    const inviteInput = document.getElementById('inviteCode');
     const emailInput = document.getElementById('loginEmail');
 
-    if (loginBtn) loginBtn.addEventListener('click', handleLogin);
-
-    if (inviteInput) {
-        inviteInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
-        // Format invite code as user types (XXXX-XXXX)
-        inviteInput.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-            if (value.length > 4) value = value.slice(0, 4) + '-' + value.slice(4, 8);
-            e.target.value = value;
-        });
+    if (loginBtn) {
+        loginBtn.addEventListener('click', handleLogin);
     }
 
     if (emailInput) {
-        emailInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+        emailInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
     }
 }
 
 function handleLogin() {
     console.log('Login attempt...');
-    const inviteInput = document.getElementById('inviteCode');
     const emailInput = document.getElementById('loginEmail');
-    const adminNote = document.getElementById('adminNote');
-
-    const code = inviteInput?.value.trim().toUpperCase() || '';
+    
     const email = emailInput?.value.trim().toLowerCase() || '';
 
-    if (!code) return showStatus('❌ Invite code required', 'error');
-    if (!email || !email.includes('@')) return showStatus('❌ Valid email required', 'error');
+    if (!email || !email.includes('@')) {
+        showStatus('❌ Valid email required', 'error');
+        return;
+    }
 
-    // Admin bypass
-    if (code === ADMIN_CODE && email === ADMIN_EMAIL) {
+    // Check if admin
+    if (email === ADMIN_EMAIL) {
         console.log('Admin access');
-        currentUser = email; inviteCode = code; isPremium = true;
+        currentUser = email;
+        isPremium = true;
         localStorage.setItem('cryptotax_user', email);
-        localStorage.setItem('cryptotax_code', code);
         localStorage.setItem('cryptotax_premium', 'true');
-        if (adminNote) adminNote.classList.remove('hidden');
-        showStatus('👑 Admin access granted', 'success');
-        return setTimeout(showDashboard, 1000);
+        showStatus('👑 Admin access granted!', 'success');
+        setTimeout(showDashboard, 1000);
+        return;
     }
 
-    // Valid beta code
-    if (VALID_CODES.includes(code)) {
-        console.log('Beta access');
-        currentUser = email; inviteCode = code; isPremium = false;
-        localStorage.setItem('cryptotax_user', email);
-        localStorage.setItem('cryptotax_code', code);
-        showStatus('✅ Access granted! Welcome to the Beta', 'success');
-        return setTimeout(showDashboard, 1000);
-    }
-
-    // Invalid code
-    showStatus('❌ Invalid invite code', 'error');
+    // Regular user
+    console.log('Regular user access');
+    currentUser = email;
+    isPremium = false;
+    localStorage.setItem('cryptotax_user', email);
+    showStatus('✅ Access granted!', 'success');
+    setTimeout(showDashboard, 1000);
 }
 
 function showStatus(message, type) {
@@ -146,6 +119,7 @@ function showLogin() {
     const loginContainer = document.getElementById('loginContainer');
     const dashboardWrapper = document.getElementById('dashboardWrapper');
     const headerTop = document.getElementById('headerTop');
+    
     if (loginContainer) loginContainer.style.display = 'flex';
     if (dashboardWrapper) dashboardWrapper.style.display = 'none';
     if (headerTop) headerTop.style.display = 'none';
@@ -153,9 +127,11 @@ function showLogin() {
 
 function showDashboard() {
     console.log('Showing dashboard for user:', currentUser);
+    
     const loginContainer = document.getElementById('loginContainer');
     const dashboardWrapper = document.getElementById('dashboardWrapper');
     const headerTop = document.getElementById('headerTop');
+    
     if (loginContainer) loginContainer.style.display = 'none';
     if (dashboardWrapper) dashboardWrapper.style.display = 'block';
     if (headerTop) headerTop.style.display = 'flex';
@@ -174,46 +150,47 @@ function showDashboard() {
             userBadge.innerHTML = '<i class="fas fa-star"></i> PREMIUM';
         } else {
             userBadge.className = 'user-badge free';
-            userBadge.innerHTML = '<i class="fas fa-user"></i> BETA USER';
+            userBadge.innerHTML = '<i class="fas fa-user"></i> FREE USER';
         }
     }
 
-    // Hide pricing banner for admin/premium
+    // Show pricing banner only for non-premium users
     const pricingBanner = document.getElementById('pricingBanner');
-    if (pricingBanner) pricingBanner.style.display = (currentUser === ADMIN_EMAIL || isPremium) ? 'none' : 'block';
+    if (pricingBanner) {
+        pricingBanner.style.display = (currentUser === ADMIN_EMAIL || isPremium) ? 'none' : 'block';
+    }
 
-    // Initialize the rest of the dashboard (charts, listeners, etc.)
+    // Initialize dashboard
     initializeDashboard();
 }
 
 // ============================================
-// DASHBOARD FUNCTIONS (FULLY RESTORED)
+// DASHBOARD FUNCTIONS
 // ============================================
 function initializeDashboard() {
     console.log('Initializing dashboard...');
 
-    // --- Country Selector ---
+    // Country selector
     document.querySelectorAll('.country-btn').forEach(btn => {
-        // Remove old listeners to avoid duplicates, then add new one
         btn.removeEventListener('click', handleCountryChange);
         btn.addEventListener('click', handleCountryChange);
     });
 
-    // --- Action Buttons ---
+    // Action buttons
     document.getElementById('importCsvBtn')?.addEventListener('click', importCSV);
     document.getElementById('addTransactionBtn')?.addEventListener('click', openModal);
     document.getElementById('generatePdfBtn')?.addEventListener('click', generatePDF);
     document.getElementById('calcScenarioBtn')?.addEventListener('click', calculateScenario);
     document.getElementById('activateBtn')?.addEventListener('click', showPaymentModal);
 
-    // --- Search ---
+    // Search
     document.getElementById('searchInput')?.addEventListener('input', (e) => filterTransactions(e.target.value));
 
-    // --- Initial Data Load ---
+    // Load initial data
     updateTaxSummary();
-    updateTaxChart(4321.09, 890.12); // Sample data
+    updateTaxChart(4321.09, 890.12);
 
-    // --- Setup Price Update Handler (Override Coingecko's default) ---
+    // Setup price updates
     if (typeof coingecko !== 'undefined') {
         coingecko.updateUI = function(prices) {
             const pricesList = document.getElementById('pricesList');
@@ -225,6 +202,7 @@ function initializeDashboard() {
             for (const [coin, data] of Object.entries(prices)) {
                 const info = coinMap[coin];
                 if (!info) continue;
+                
                 const item = document.createElement('div');
                 item.className = 'price-item';
                 item.innerHTML = `
@@ -237,16 +215,17 @@ function initializeDashboard() {
             }
 
             const updateTime = document.getElementById('updateTime');
-            if (updateTime) updateTime.innerHTML = `<i class="fas fa-sync-alt"></i> Updated: ${new Date().toLocaleTimeString()}`;
+            if (updateTime) {
+                updateTime.innerHTML = `<i class="fas fa-sync-alt"></i> Updated: ${new Date().toLocaleTimeString()}`;
+            }
         };
-        // Trigger initial update if prices are already cached
+
         if (coingecko.cache.prices) {
             coingecko.updateUI(coingecko.cache.prices);
         }
     }
 }
 
-// Handler for country change
 function handleCountryChange(event) {
     const btn = event.currentTarget;
     document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
@@ -265,20 +244,27 @@ function handleCountryChange(event) {
     }
 }
 
-// --- Feature Functions (simplified for demo, but functional) ---
+// Feature functions
 function importCSV() {
-    if (!isPremium) { alert('✨ Premium feature. Upgrade to import CSV.'); showPaymentModal(); return; }
-    alert('CSV Import - Demo (Premium feature)');
+    if (!isPremium) {
+        alert('✨ Premium feature. Upgrade to import CSV.');
+        showPaymentModal();
+        return;
+    }
+    alert('📁 CSV Import - Premium feature (demo)');
 }
 
 function openModal() {
-    if (!isPremium) { alert('✨ Premium feature. Upgrade to add transactions.'); showPaymentModal(); return; }
-    alert('Add Transaction - Demo (Premium feature)');
+    if (!isPremium) {
+        alert('✨ Premium feature. Upgrade to add transactions.');
+        showPaymentModal();
+        return;
+    }
+    alert('➕ Add Transaction - Premium feature (demo)');
 }
 
 function generatePDF() {
-    alert('📄 PDF Generated! (Demo)');
-    // In a real implementation, you'd use jspdf here
+    alert('📄 PDF Generated! (Demo report)');
 }
 
 function calculateScenario() {
@@ -298,7 +284,7 @@ function calculateScenario() {
     }
 
     const totalValue = amount * price;
-    const estimatedGain = totalValue * 0.2; // Assume 20% gain for demo
+    const estimatedGain = totalValue * 0.2; // Assume 20% gain
     const tax = typeof taxEngine !== 'undefined' ? taxEngine.calculateTax(estimatedGain, currentCountry) : 0;
 
     resultDiv.innerHTML = `
@@ -312,11 +298,10 @@ function calculateScenario() {
 function filterTransactions(searchTerm) {
     if (!isPremium) return;
     console.log('Searching:', searchTerm);
-    // Implement filtering logic here
 }
 
 function updateTaxSummary() {
-    const gain = 4321.09; // Sample gain
+    const gain = 4321.09;
     const tax = typeof taxEngine !== 'undefined' ? taxEngine.calculateTax(gain, currentCountry) : 890.12;
 
     document.getElementById('totalGain').textContent = `$${gain.toFixed(2)}`;
@@ -343,50 +328,76 @@ function updateTaxChart(gain, tax) {
                 borderWidth: 0
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        }
     });
 }
 
 // ============================================
 // MODAL FUNCTIONS
 // ============================================
-function showPaymentModal() { document.getElementById('activationModal')?.classList.add('show'); }
-function closeModal() { document.getElementById('activationModal')?.classList.remove('show'); }
-function showLogoutModal() { document.getElementById('logoutModal')?.classList.add('show'); }
-function closeLogoutModal() { document.getElementById('logoutModal')?.classList.remove('show'); }
+function showPaymentModal() { 
+    document.getElementById('activationModal')?.classList.add('show'); 
+}
+
+function closeModal() { 
+    document.getElementById('activationModal')?.classList.remove('show'); 
+}
+
+function showLogoutModal() { 
+    document.getElementById('logoutModal')?.classList.add('show'); 
+}
+
+function closeLogoutModal() { 
+    document.getElementById('logoutModal')?.classList.remove('show'); 
+}
 
 function copyWallet() {
     const wallet = 'bc1qqgjsumsw82804vscpeysz2te3zsx2jfzndawfk';
-    navigator.clipboard.writeText(wallet).then(() => alert('✅ Copied!')).catch(() => alert('❌ Copy manually'));
+    navigator.clipboard.writeText(wallet)
+        .then(() => alert('✅ Wallet address copied!'))
+        .catch(() => alert('❌ Please copy manually'));
 }
 
 function checkPayment() {
     const statusElement = document.getElementById('modalPaymentStatus');
     if (!statusElement) return;
+    
     statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    
     setTimeout(() => {
         statusElement.innerHTML = '<i class="fas fa-check-circle" style="color:#00ff9d;"></i> Payment confirmed!';
+        
         setTimeout(() => {
             isPremium = true;
             localStorage.setItem('cryptotax_premium', 'true');
             closeModal();
-            document.getElementById('pricingBanner').style.display = 'none';
+            
+            const pricingBanner = document.getElementById('pricingBanner');
+            if (pricingBanner) pricingBanner.style.display = 'none';
+            
             const badge = document.getElementById('userBadge');
-            if (badge) { badge.className = 'user-badge premium'; badge.innerHTML = '<i class="fas fa-star"></i> PREMIUM'; }
+            if (badge) {
+                badge.className = 'user-badge premium';
+                badge.innerHTML = '<i class="fas fa-star"></i> PREMIUM';
+            }
+            
+            alert('🎉 PREMIUM ACTIVATED!');
         }, 1500);
     }, 3000);
 }
 
 function logout() {
     localStorage.removeItem('cryptotax_user');
-    localStorage.removeItem('cryptotax_code');
-    // Keep premium flag? Decide: if they paid, they shouldn't lose it. We'll keep it.
-    // localStorage.removeItem('cryptotax_premium');
+    // Keep premium status if they paid
     closeLogoutModal();
     showLogin();
 }
 
-// Expose functions to global scope (for onclick attributes in HTML)
+// Expose functions globally
 window.showPaymentModal = showPaymentModal;
 window.closeModal = closeModal;
 window.showLogoutModal = showLogoutModal;
@@ -394,7 +405,6 @@ window.closeLogoutModal = closeLogoutModal;
 window.copyWallet = copyWallet;
 window.checkPayment = checkPayment;
 window.logout = logout;
-// Also expose for potential future use
 window.importCSV = importCSV;
 window.generatePDF = generatePDF;
 window.calculateScenario = calculateScenario;
