@@ -1,5 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub stars](https://img.shields.io/github/stars/nutmegdev96/cryptotax-dashboard)](https://github.com/nutmegdev96/cryptotax-dashboard/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/nutmegdev96/cryptotax-dashboard)]([https://github.com/nutmegdev96/cryptotax-dashboard/stargazers](https://github.com/nutmegdev96/CryptoTax-Calculator.git))
 
 A futuristic, cyberpunk-styled cryptocurrency tax calculator supporting multiple countries' tax rules. All calculations happen in your browser - **your data never leaves your device!**
 
