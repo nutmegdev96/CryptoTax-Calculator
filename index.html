@@ -65,12 +65,12 @@
                     <i class="fas fa-hourglass-half"></i> Waiting for payment...
                 </div>
             </div>
-            <button class="activate-btn" id="activateBtn" onclick="showPayment()">
+            <button class="activate-btn" id="activateBtn">
                 <i class="fas fa-lock"></i> ACTIVATE PREMIUM FOR $10
             </button>
         </div>
 
-        <!-- Main Dashboard (initially blurred) -->
+        <!-- Main Dashboard -->
         <div class="dashboard-container" id="dashboardContainer">
             <!-- Stats Cards with Neon Effect -->
             <div class="stats-grid">
@@ -132,20 +132,18 @@
                 </div>
             </div>
 
-            <!-- Action Bar - Only GENERATE PDF works -->
+            <!-- Action Bar - All Buttons Now Functional -->
             <div class="action-bar">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
                     <input type="text" id="searchInput" placeholder="Search transactions...">
                 </div>
                 <div class="action-buttons">
-                    <button class="action-btn disabled" disabled>
+                    <button class="action-btn" id="importCsvBtn">
                         <i class="fas fa-file-import"></i> IMPORT CSV
-                        <span class="premium-tag">PREMIUM</span>
                     </button>
-                    <button class="action-btn disabled" disabled>
+                    <button class="action-btn" id="addTransactionBtn">
                         <i class="fas fa-plus"></i> ADD MANUAL
-                        <span class="premium-tag">PREMIUM</span>
                     </button>
                     <button class="action-btn primary" id="generatePdfBtn">
                         <i class="fas fa-file-pdf"></i> GENERATE PDF
@@ -178,18 +176,13 @@
                                 </tr>
                             </thead>
                             <tbody id="transactionsBody">
-                                <tr class="premium-placeholder">
-                                    <td colspan="7">
-                                        <i class="fas fa-lock"></i>
-                                        <span>Activate PREMIUM to view and add transactions</span>
-                                    </td>
-                                </tr>
+                                <!-- Transactions will be loaded here -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Tax Summary & Charts -->
+                <!-- Right Panel -->
                 <div class="right-panel">
                     <!-- Tax Summary Card -->
                     <div class="glass-card tax-summary-card">
@@ -233,26 +226,7 @@
                             </span>
                         </div>
                         <div class="prices-list" id="pricesList">
-                            <div class="price-item">
-                                <span class="coin">BTC</span>
-                                <span class="price loading">Loading...</span>
-                                <span class="change">-</span>
-                            </div>
-                            <div class="price-item">
-                                <span class="coin">ETH</span>
-                                <span class="price loading">Loading...</span>
-                                <span class="change">-</span>
-                            </div>
-                            <div class="price-item">
-                                <span class="coin">BNB</span>
-                                <span class="price loading">Loading...</span>
-                                <span class="change">-</span>
-                            </div>
-                            <div class="price-item">
-                                <span class="coin">SOL</span>
-                                <span class="price loading">Loading...</span>
-                                <span class="change">-</span>
-                            </div>
+                            <!-- Prices will be loaded here -->
                         </div>
                         <div class="update-time" id="updateTime">
                             <i class="fas fa-sync-alt fa-spin"></i> Updating...
