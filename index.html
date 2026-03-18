@@ -27,19 +27,54 @@
     <div class="particles" id="particles"></div>
     
     <div class="container">
-        <!-- Header with Premium Badge -->
-        <div class="header">
-            <div class="premium-badge">
+        <!-- Header with Login/User Info -->
+        <div class="header-top">
+            <div class="premium-badge" id="premiumBadge">
                 <i class="fas fa-crown"></i> PREMIUM TIER
             </div>
-            <h1 class="glitch" data-text="CRYPTOTAX">CRYPTOTAX</h1>
+            <div class="user-section" id="userSection">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Login Modal (shown if not logged in) -->
+        <div class="login-modal" id="loginModal">
+            <div class="login-content">
+                <div class="login-header">
+                    <i class="fas fa-lock"></i>
+                    <h2>ACCESS CRYPTOTAX</h2>
+                </div>
+                <div class="login-body">
+                    <p class="login-welcome">Enter your email to continue</p>
+                    <input type="email" id="loginEmail" class="login-input" placeholder="your@email.com" value="macissimon@gmail.com">
+                    <button class="login-btn" id="loginBtn">
+                        <i class="fas fa-arrow-right"></i> ACCESS DASHBOARD
+                    </button>
+                    <p class="login-note">
+                        <i class="fas fa-info-circle"></i>
+                        No password required • Free access for demo
+                    </p>
+                    <div class="admin-note" id="adminNote">
+                        <i class="fas fa-star"></i>
+                        Admin: macissimon@gmail.com gets automatic PREMIUM
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Header -->
+        <div class="header" id="mainHeader" style="display: none;">
+            <div class="glitch-wrapper">
+                <h1 class="glitch" data-text="CRYPTOTAX">CRYPTOTAX</h1>
+                <div class="glitch-overlay"></div>
+            </div>
             <div class="subtitle">
                 <span class="neon-text">real-time</span> • <span class="neon-text">multi-jurisdiction</span> • <span class="neon-text">coingecko™ powered</span>
             </div>
         </div>
 
-        <!-- Pricing Banner -->
-        <div class="pricing-banner" id="pricingBanner">
+        <!-- Pricing Banner (hidden for admin) -->
+        <div class="pricing-banner" id="pricingBanner" style="display: none;">
             <div class="pricing-content">
                 <div class="pricing-left">
                     <i class="fas fa-bolt"></i>
@@ -71,7 +106,7 @@
         </div>
 
         <!-- Main Dashboard -->
-        <div class="dashboard-container" id="dashboardContainer">
+        <div class="dashboard-container" id="dashboardContainer" style="display: none;">
             <!-- Stats Cards with Neon Effect -->
             <div class="stats-grid">
                 <div class="stat-card" data-glow="cyan">
@@ -132,7 +167,7 @@
                 </div>
             </div>
 
-            <!-- Action Bar - All Buttons Now Functional -->
+            <!-- Action Bar -->
             <div class="action-bar">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
@@ -298,6 +333,27 @@
                 <button class="verify-btn" onclick="checkPayment()">
                     <i class="fas fa-sync-alt"></i> I'VE SENT PAYMENT
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal" id="logoutModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-sign-out-alt"></i> LOGOUT</h3>
+                <button class="close-modal" onclick="closeLogoutModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to logout?</p>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="verify-btn" onclick="logout()" style="background: #ff3b3b;">
+                        <i class="fas fa-check"></i> YES, LOGOUT
+                    </button>
+                    <button class="verify-btn" onclick="closeLogoutModal()" style="background: #333;">
+                        <i class="fas fa-times"></i> CANCEL
+                    </button>
+                </div>
             </div>
         </div>
     </div>
