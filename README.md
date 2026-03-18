@@ -38,35 +38,35 @@ cd cryptotax-dashboard
 
 ## 🎯 Usage
 
-Select your country of residence
-Add your crypto transactions
-View real-time tax calculations
-Use the scenario planner for "what-if" analysis
-Export reports as PDF/CSV
+- Select your country of residence
+- Add your crypto transactions
+- View real-time tax calculations
+- Use the scenario planner for "what-if" analysis
+- Export reports as PDF/CSV
 
 
 ## 📝 Supported Tax Rules
 
-Italy: 26% on gains > €2,000, crypto-to-crypto tax-free
-USA: Short-term (income rates) vs Long-term (0-20%)
-Germany: Tax-free after 1 year holding
-UK: £3,000 allowance, progressive rates
-India: 30% flat + 1% TDS
-Spain: Progressive up to 28%
+- Italy: 26% on gains > €2,000, crypto-to-crypto tax-free
+- USA: Short-term (income rates) vs Long-term (0-20%)
+- Germany: Tax-free after 1 year holding
+- UK: £3,000 allowance, progressive rates
+- India: 30% flat + 1% TDS
+- Spain: Progressive up to 28%
 
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to open issues or PRs.
+- Contributions are welcome! Feel free to open issues or PRs.
 
 
 ## 📄 License
 
-MIT © nutmegdev
+- MIT © nutmegdev
 
 
 ## 👨‍💻 Author
 
-Simone Macis (nutmegdev)
-GitHub: @nutmegdev96
-LinkedIn: Simone Macis
+- Simone Macis (nutmegdev)
+- GitHub: @nutmegdev96
+- LinkedIn: Simone Macis
