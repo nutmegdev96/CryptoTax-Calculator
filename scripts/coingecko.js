@@ -3,7 +3,10 @@
 class CoinGeckoAPI {
     constructor() {
         this.baseURL = 'https://api.coingecko.com/api/v3';
-        this.cache = {};
+        this.cache = {
+            prices: null,
+            timestamp: null
+        };
         this.updateInterval = 60000; // 60 seconds
         this.supportedCoins = ['bitcoin', 'ethereum', 'binancecoin', 'solana'];
         this.symbolMap = {
@@ -85,7 +88,7 @@ class CoinGeckoAPI {
         if (pricesList) {
             pricesList.innerHTML = `
                 <div class="price-item">
-                    <span class="coin" style="color: var(--neon-red);">API Error</span>
+                    <span class="coin" style="color: #ff3b3b;">API Error</span>
                     <span class="price">Retrying...</span>
                 </div>
             `;
@@ -106,5 +109,5 @@ class CoinGeckoAPI {
     }
 }
 
-// Initialize
+// Initialize global instance
 const coingecko = new CoinGeckoAPI();
